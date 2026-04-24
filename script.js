@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==============================
     const sendHeartbeat = async () => {
     try {
-        await fetch('https://corsproxy.io/?https://019dbd78-7a57-7941-8bf0-e3356bd37bb5.arena.site/api/heartbeat', {
+        await fetch('https://klyon-manage.vercel.app/api/heartbeat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
