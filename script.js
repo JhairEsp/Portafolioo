@@ -57,38 +57,38 @@ document.addEventListener('DOMContentLoaded', function() {
     // 📊 MÉTRICAS
     // =============================
     const sendMetrics = async () => {
-        try {
-            const duration = Math.floor((Date.now() - startTime) / 1000);
+    try {
+        const duration = Math.floor((Date.now() - startTime) / 1000);
 
-            const payload = {
-                projectId: KLYON_CONFIG.projectId,
-                apiKey: KLYON_CONFIG.apiKey,
-                sessions: sessionMetrics.sessions,
-                sales: sessionMetrics.sales,
-                errors: sessionMetrics.errors,
-                duration: duration
-            };
+        const payload = {
+            projectId: KLYON_CONFIG.projectId,
+            apiKey: KLYON_CONFIG.apiKey,
+            sessions: sessionMetrics.sessions,
+            sales: sessionMetrics.sales,
+            errors: sessionMetrics.errors,
+            duration: duration
+        };
 
-            await fetch(`${KLYON_CONFIG.url}/api/metrics`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+        // Forzamos el modo 'cors' en el fetch
+        await fetch(`${KLYON_CONFIG.url}/api/metrics`, {
+            method: 'POST',
+            mode: 'cors', // <--- IMPORTANTE
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
 
-            // 🔥 RESET
-            sessionMetrics = {
-                sessions: 0,
-                sales: 0,
-                errors: 0,
-                duration: 0
-            };
+        // Solo reseteamos si tuvo éxito
+        sessionMetrics.sessions = 0;
+        sessionMetrics.sales = 0;
+        sessionMetrics.errors = 0;
+        startTime = Date.now();
 
-            startTime = Date.now();
-
-        } catch (error) {
-            console.error('❌ Error enviando métricas', error);
-        }
-    };
+    } catch (error) {
+        console.error('❌ Error enviando métricas', error);
+    }
+};
 
     // =============================
     // 🧠 SEND BEACON (al salir)
