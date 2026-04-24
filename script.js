@@ -277,25 +277,81 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('scroll', checkScroll);
     checkScroll();
 
-const sendHeartbeat = async () => {
-  try {
-    await fetch('https://klyon-manage.vercel.app/api/heartbeat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        projectId: '0722c1c3-ed89-4b07-96f7-4c75cd1750b4',
-        apiKey: 'eb79ae517cd24ef118c610bdea35dc67d69a8d27378c29dd'
-      })
-    });
+// ... (Todo tu código anterior de navegación, scroll, etc. se mantiene igual) ...
 
-    console.log('✅ enviado a Klyon');
-
-  } catch (error) {
-    console.error('❌ error', error);
-  }
+// --- CONFIGURACIÓN DE KLYON ---
+const KLYON_CONFIG = {
+    url: 'https://klyon-manage.vercel.app',
+    projectId: '0722c1c3-ed89-4b07-96f7-4c75cd1750b4',
+    apiKey: 'eb79ae517cd24ef118c610bdea35dc67d69a8d27378c29dd'
 };
 
-// SOLO UNA VEZ
+// --- SISTEMA DE MÉTRICAS ---
+let sessionMetrics = {
+    users: 1, // Si cargó la página, contamos 1 sesión/usuario
+    sales: 0,
+    errors: 0
+};
+
+// Capturar errores automáticamente
+window.addEventListener('error', function(event) {
+    sessionMetrics.errors++;
+    console.log('❌ Error capturado para Klyon');
+});
+
+// Función para enviar latido (Heartbeat) - Se mantiene igual
+const sendHeartbeat = async () => {
+    try {
+        await fetch(`${KLYON_CONFIG.url}/api/heartbeat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                projectId: KLYON_CONFIG.projectId,
+                apiKey: KLYON_CONFIG.apiKey
+            })
+        });
+        console.log('✅ Heartbeat enviado a Klyon');
+    } catch (error) {
+        console.error('❌ Error en heartbeat', error);
+    }
+};
+
+// Nueva función para enviar métricas (Usuarios, Ventas, Errores)
+const sendMetrics = async () => {
+    try {
+        await fetch(`${KLYON_CONFIG.url}/api/metrics`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                projectId: KLYON_CONFIG.projectId,
+                apiKey: KLYON_CONFIG.apiKey,
+                users: sessionMetrics.users,
+                sales: sessionMetrics.sales,
+                errors: sessionMetrics.errors
+            })
+        });
+        console.log('📊 Métricas enviadas a Klyon:', sessionMetrics);
+    } catch (error) {
+        console.error('❌ Error enviando métricas', error);
+    }
+};
+
+// --- INICIALIZACIÓN ---
+
+// Enviar Heartbeat cada 1 minuto (para que salga ONLINE)
 sendHeartbeat();
 setInterval(sendHeartbeat, 60000);
-});
+
+// Enviar Métricas cada 5 minutos (o al cargar la página)
+sendMetrics(); 
+setInterval(sendMetrics, 300000); 
+
+// EJEMPLO: Si quieres contar una venta cuando alguien envíe el formulario de contacto
+const contactForm = document.getElementById('contactForm');
+if (contactForm) {
+    contactForm.addEventListener('submit', () => {
+        // Si el formulario es válido, podrías contarlo como una conversión/venta
+        sessionMetrics.sales += 10; // Ejemplo: sumamos 10 al valor de ventas
+        sendMetrics(); // Enviamos actualización inmediata
+    });
+}
