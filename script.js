@@ -281,23 +281,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // KLYON HEARTBEAT (SOLO TEST)
     // ==============================
     const sendHeartbeat = async () => {
-        try {
-            await fetch('https://019dbd78-7a57-7941-8bf0-e3356bd37bb5.arena.site/api/heartbeat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    projectId: '0722c1c3-ed89-4b07-96f7-4c75cd1750b4',
-                    apiKey: 'eb79ae517cd24ef118c610bdea35dc67d69a8d27378c29dd'
-                })
-            });
+    try {
+        await fetch('https://corsproxy.io/?https://019dbd78-7a57-7941-8bf0-e3356bd37bb5.arena.site/api/heartbeat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                projectId: 'TU_PROJECT_ID',
+                apiKey: 'eb79ae517cd24ef118c610bdea35dc67d69a8d27378c29dd'
+            })
+        });
 
-            console.log('Heartbeat enviado correctamente');
-        } catch (error) {
-            console.error('Error enviando heartbeat:', error);
-        }
-    };
+        console.log('✅ Heartbeat enviado');
+    } catch (error) {
+        console.error('❌ Error:', error);
+    }
+};
 
     // enviar al cargar
     sendHeartbeat();
