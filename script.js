@@ -295,16 +295,7 @@ const sendHeartbeat = async () => {
   }
 };
 
-setInterval(sendHeartbeat, 60000);
-// enviar al cargar
+// SOLO UNA VEZ
 sendHeartbeat();
-
-// enviar cada 60 segundos
 setInterval(sendHeartbeat, 60000);
-
-    // enviar al cargar
-    sendHeartbeat();
-
-    // enviar cada 60 segundos
-    setInterval(sendHeartbeat, 60000);
 });
