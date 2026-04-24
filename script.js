@@ -6,10 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const navLinks = document.querySelectorAll('.nav-links li');
     
     burger.addEventListener('click', () => {
-        // Toggle Nav
         nav.classList.toggle('nav-active');
         
-        // Animate Links
         navLinks.forEach((link, index) => {
             if (link.style.animation) {
                 link.style.animation = '';
@@ -18,13 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Burger Animation
         burger.classList.toggle('toggle');
     });
     
     // Sticky Header
     const header = document.querySelector('header');
-    const heroSection = document.querySelector('.hero');
     
     window.addEventListener('scroll', () => {
         if (window.scrollY > 50) {
@@ -33,16 +29,17 @@ document.addEventListener('DOMContentLoaded', function() {
             header.classList.remove('sticky');
         }
         
-        // Back to top button
         const backToTop = document.querySelector('.back-to-top');
-        if (window.scrollY > 500) {
-            backToTop.classList.add('active');
-        } else {
-            backToTop.classList.remove('active');
+        if (backToTop) {
+            if (window.scrollY > 500) {
+                backToTop.classList.add('active');
+            } else {
+                backToTop.classList.remove('active');
+            }
         }
     });
     
-    // Smooth scrolling for anchor links
+    // Smooth scrolling
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             e.preventDefault();
@@ -56,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     behavior: 'smooth'
                 });
                 
-                // Close mobile menu if open
                 if (nav.classList.contains('nav-active')) {
                     nav.classList.remove('nav-active');
                     burger.classList.remove('toggle');
@@ -65,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
                 
-                // Update active nav link
                 document.querySelectorAll('.nav-links a').forEach(link => {
                     link.classList.remove('active');
                 });
@@ -74,14 +69,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Back to top button click
+    // Back to top
     const backToTop = document.querySelector('.back-to-top');
-    backToTop.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+    if (backToTop) {
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
-    });
+    }
     
     // Skills tabs
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -89,19 +86,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Remove active class from all buttons
-            tabBtns.forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Add active class to clicked button
+            tabBtns.forEach(btn => btn.classList.remove('active'));
             btn.classList.add('active');
             
-            // Show corresponding tab pane
             const target = btn.getAttribute('data-target');
-            tabPanes.forEach(pane => {
-                pane.classList.remove('active');
-            });
+            tabPanes.forEach(pane => pane.classList.remove('active'));
             document.getElementById(target).classList.add('active');
         });
     });
@@ -112,25 +101,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Remove active class from all buttons
-            filterBtns.forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Add active class to clicked button
+            filterBtns.forEach(btn => btn.classList.remove('active'));
             btn.classList.add('active');
             
-            // Filter projects
             const filter = btn.getAttribute('data-filter');
             
             projectItems.forEach(item => {
-                if (filter === 'all') {
-                    item.style.display = 'block';
-                    setTimeout(() => {
-                        item.style.opacity = '1';
-                        item.style.transform = 'scale(1)';
-                    }, 200);
-                } else if (item.getAttribute('data-category') === filter) {
+                if (filter === 'all' || item.getAttribute('data-category') === filter) {
                     item.style.display = 'block';
                     setTimeout(() => {
                         item.style.opacity = '1';
@@ -151,34 +128,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const cursor = document.querySelector('.cursor');
     const cursorFollower = document.querySelector('.cursor-follower');
     
-    document.addEventListener('mousemove', (e) => {
-        cursor.style.left = e.clientX + 'px';
-        cursor.style.top = e.clientY + 'px';
-        
-        setTimeout(() => {
-            cursorFollower.style.left = e.clientX + 'px';
-            cursorFollower.style.top = e.clientY + 'px';
-        }, 100);
-    });
-    
-    // Cursor effects on hover
-    const links = document.querySelectorAll('a, button, .btn, .social-icon');
-    
-    links.forEach(link => {
-        link.addEventListener('mouseenter', () => {
-            cursor.style.width = '50px';
-            cursor.style.height = '50px';
-            cursor.style.border = '1px solid var(--primary)';
-            cursorFollower.style.width = '0';
+    if (cursor && cursorFollower) {
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            
+            setTimeout(() => {
+                cursorFollower.style.left = e.clientX + 'px';
+                cursorFollower.style.top = e.clientY + 'px';
+            }, 100);
         });
         
-        link.addEventListener('mouseleave', () => {
-            cursor.style.width = '20px';
-            cursor.style.height = '20px';
-            cursor.style.border = '2px solid var(--primary)';
-            cursorFollower.style.width = '8px';
+        const links = document.querySelectorAll('a, button, .btn, .social-icon');
+        
+        links.forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                cursor.style.width = '50px';
+                cursor.style.height = '50px';
+                cursor.style.border = '1px solid var(--primary)';
+                cursorFollower.style.width = '0';
+            });
+            
+            link.addEventListener('mouseleave', () => {
+                cursor.style.width = '20px';
+                cursor.style.height = '20px';
+                cursor.style.border = '2px solid var(--primary)';
+                cursorFollower.style.width = '8px';
+            });
         });
-    });
+    }
     
     // Form validation
     const contactForm = document.getElementById('contactForm');
@@ -187,7 +165,6 @@ document.addEventListener('DOMContentLoaded', function() {
         contactForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            // Simple validation
             let valid = true;
             const name = document.getElementById('name');
             const email = document.getElementById('email');
@@ -197,9 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (name.value.trim() === '') {
                 valid = false;
                 showError(name, 'Por favor ingresa tu nombre');
-            } else {
-                removeError(name);
-            }
+            } else removeError(name);
             
             if (email.value.trim() === '') {
                 valid = false;
@@ -207,27 +182,19 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (!isValidEmail(email.value)) {
                 valid = false;
                 showError(email, 'Por favor ingresa un email válido');
-            } else {
-                removeError(email);
-            }
+            } else removeError(email);
             
             if (subject.value.trim() === '') {
                 valid = false;
                 showError(subject, 'Por favor ingresa un asunto');
-            } else {
-                removeError(subject);
-            }
+            } else removeError(subject);
             
             if (message.value.trim() === '') {
                 valid = false;
                 showError(message, 'Por favor ingresa un mensaje');
-            } else {
-                removeError(message);
-            }
+            } else removeError(message);
             
             if (valid) {
-                // Here you would normally send the form data to a server
-                // For demo purposes, we'll just show a success message
                 contactForm.reset();
                 alert('¡Mensaje enviado con éxito!');
             }
@@ -236,6 +203,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function showError(input, message) {
         const formGroup = input.parentElement;
+        removeError(input);
+        
         const errorElement = document.createElement('div');
         errorElement.className = 'error-message';
         errorElement.textContent = message;
@@ -243,13 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
         errorElement.style.fontSize = '0.8rem';
         errorElement.style.marginTop = '5px';
         
-        // Remove any existing error message
-        removeError(input);
-        
-        // Add the error message
         formGroup.appendChild(errorElement);
-        
-        // Add error styling
         input.style.borderColor = '#dc3545';
     }
     
@@ -269,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return re.test(String(email).toLowerCase());
     }
     
-    // Active navigation link based on scroll position
+    // Active nav on scroll
     const sections = document.querySelectorAll('section');
     
     window.addEventListener('scroll', () => {
@@ -277,8 +240,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
-            const sectionHeight = section.clientHeight;
-            
             if (window.pageYOffset >= sectionTop - 200) {
                 current = section.getAttribute('id');
             }
@@ -307,7 +268,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Set initial state for animated elements
     animateElements.forEach(element => {
         element.style.opacity = '0';
         element.style.transform = 'translateY(20px)';
@@ -315,7 +275,33 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     window.addEventListener('scroll', checkScroll);
-    
-    // Call once on load
     checkScroll();
+
+    // ==============================
+    // KLYON HEARTBEAT (SOLO TEST)
+    // ==============================
+    const sendHeartbeat = async () => {
+        try {
+            await fetch('https://019dbd78-7a57-7941-8bf0-e3356bd37bb5.arena.site/api/heartbeat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    projectId: '0722c1c3-ed89-4b07-96f7-4c75cd1750b4',
+                    apiKey: 'eb79ae517cd24ef118c610bdea35dc67d69a8d27378c29dd'
+                })
+            });
+
+            console.log('Heartbeat enviado correctamente');
+        } catch (error) {
+            console.error('Error enviando heartbeat:', error);
+        }
+    };
+
+    // enviar al cargar
+    sendHeartbeat();
+
+    // enviar cada 60 segundos
+    setInterval(sendHeartbeat, 60000);
 });
