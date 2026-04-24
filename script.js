@@ -35,23 +35,52 @@ document.addEventListener('DOMContentLoaded', function() {
         sessionMetrics.errors++;
     });
 
-    // =============================
-    // ❤️ HEARTBEAT
-    // =============================
-    const sendHeartbeat = async () => {
-        try {
-            await fetch(`${KLYON_CONFIG.url}/api/heartbeat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    projectId: KLYON_CONFIG.projectId,
-                    apiKey: KLYON_CONFIG.apiKey
-                })
-            });
-        } catch (error) {
-            console.error('❌ Error en heartbeat', error);
+// =============================
+// ❤️ HEARTBEAT + CONTROL REMOTO
+// =============================
+const sendHeartbeat = async () => {
+    try {
+        const response = await fetch(`${KLYON_CONFIG.url}/api/heartbeat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                projectId: KLYON_CONFIG.projectId,
+                apiKey: KLYON_CONFIG.apiKey
+            })
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        // 1. 🔒 CONTROL DE BLOQUEO (Si el estado es 'suspended')
+        if (data.status === 'suspended') {
+            document.body.innerHTML = `
+                <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; background:#0f172a; color:white; text-align:center; padding:20px; position:fixed; top:0; left:0; width:100%; z-index:999999;">
+                    <div style="background:rgba(255,255,255,0.05); padding:40px; border-radius:30px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(10px);">
+                        <h1 style="font-size:2.5rem; margin-bottom:10px;">Sitio Suspendido</h1>
+                        <p style="opacity:0.7; max-width:400px; margin:0 auto 30px;">Este proyecto ha sido desactivado temporalmente. Por favor, contacta con el administrador para restaurar el acceso.</p>
+                        <a href="mailto:tu-correo@ejemplo.com" style="background:#3b82f6; color:white; text-decoration:none; padding:12px 30px; border-radius:12px; font-weight:bold; transition:0.3s;">Contactar Soporte</a>
+                    </div>
+                </div>
+            `;
+            // Detener otros intervalos para ahorrar recursos
+            return; 
         }
-    };
+
+        // 2. 🔔 CONTROL DE ALERTA (Si mandaste el mensaje de pago)
+        if (data.config && data.config.show_popup) {
+            // Verificamos si ya mostramos la alerta en esta sesión para no molestar
+            if (!sessionStorage.getItem('klyon_alert_shown')) {
+                alert(data.config.message || "Recordatorio: Se acerca la fecha de pago de tu servicio.");
+                sessionStorage.setItem('klyon_alert_shown', 'true');
+            }
+        }
+
+    } catch (error) {
+        console.error('❌ Error en control remoto Klyon:', error);
+    }
+};
 
     // =============================
     // 📊 MÉTRICAS
