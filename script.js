@@ -277,23 +277,25 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('scroll', checkScroll);
     checkScroll();
 
-// ==============================
-// KLYON HEARTBEAT (FUNCIONANDO)
-// ==============================
 const sendHeartbeat = async () => {
-    try {
-        const response = await fetch('/api/heartbeats', {
-            method: 'POST'
-        });
+  try {
+    await fetch('https://klyon-manage.vercel.app/api/heartbeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        projectId: '0722c1c3-ed89-4b07-96f7-4c75cd1750b4',
+        apiKey: 'eb79ae517cd24ef118c610bdea35dc67d69a8d27378c29dd'
+      })
+    });
 
-        const data = await response.json();
-        console.log('✅ Heartbeat enviado:', data);
+    console.log('✅ enviado a Klyon');
 
-    } catch (error) {
-        console.error('❌ Error:', error);
-    }
+  } catch (error) {
+    console.error('❌ error', error);
+  }
 };
 
+setInterval(sendHeartbeat, 60000);
 // enviar al cargar
 sendHeartbeat();
 
