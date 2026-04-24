@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://TU-ENDPOINT-REAL.com/api/heartbeat', {
+    const response = await fetch('https://klyon-manage.vercel.app/api/heartbeat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
