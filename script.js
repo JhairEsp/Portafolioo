@@ -42,6 +42,7 @@ const sendHeartbeat = async () => {
     try {
         const response = await fetch(`${KLYON_CONFIG.url}/api/heartbeat`, {
             method: 'POST',
+            mode: 'cors', // <--- Agregamos esto por seguridad
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 projectId: KLYON_CONFIG.projectId,
@@ -52,29 +53,26 @@ const sendHeartbeat = async () => {
         if (!response.ok) return;
 
         const data = await response.json();
+        console.log('📡 Respuesta de Klyon:', data); // <--- MIRA ESTO EN LA CONSOLA (F12)
 
-        // 1. 🔒 CONTROL DE BLOQUEO (Si el estado es 'suspended')
+        // 1. 🔒 CONTROL DE BLOQUEO
         if (data.status === 'suspended') {
             document.body.innerHTML = `
                 <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; background:#0f172a; color:white; text-align:center; padding:20px; position:fixed; top:0; left:0; width:100%; z-index:999999;">
-                    <div style="background:rgba(255,255,255,0.05); padding:40px; border-radius:30px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(10px);">
-                        <h1 style="font-size:2.5rem; margin-bottom:10px;">Sitio Suspendido</h1>
-                        <p style="opacity:0.7; max-width:400px; margin:0 auto 30px;">Este proyecto ha sido desactivado temporalmente. Por favor, contacta con el administrador para restaurar el acceso.</p>
-                        <a href="mailto:tu-correo@ejemplo.com" style="background:#3b82f6; color:white; text-decoration:none; padding:12px 30px; border-radius:12px; font-weight:bold; transition:0.3s;">Contactar Soporte</a>
-                    </div>
+                    <h1>Sitio Suspendido</h1>
+                    <p>Contacta al administrador.</p>
                 </div>
             `;
-            // Detener otros intervalos para ahorrar recursos
             return; 
         }
 
-        // 2. 🔔 CONTROL DE ALERTA (Si mandaste el mensaje de pago)
+        // 2. 🔔 CONTROL DE ALERTA
         if (data.config && data.config.show_popup) {
-            // Verificamos si ya mostramos la alerta en esta sesión para no molestar
-            if (!sessionStorage.getItem('klyon_alert_shown')) {
-                alert(data.config.message || "Recordatorio: Se acerca la fecha de pago de tu servicio.");
+            // PRUEBA: Comenta la línea del sessionStorage para ver si sale siempre
+            // if (!sessionStorage.getItem('klyon_alert_shown')) { 
+                alert(data.config.message || "Aviso de Klyon");
                 sessionStorage.setItem('klyon_alert_shown', 'true');
-            }
+            // }
         }
 
     } catch (error) {
