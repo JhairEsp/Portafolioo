@@ -295,6 +295,20 @@ const sendHeartbeat = async () => {
   }
 };
 
+const reportMetrics = async (data) => {
+  await fetch('https://https://klyon-manage.vercel.app/api/metrics', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      projectId: '0722c1c3-ed89-4b07-96f7-4c75cd1750b4',
+      apiKey: 'eb79ae517cd24ef118c610bdea35dc67d69a8d27378c29dd'
+      users: data.users,
+      sales: data.sales,
+      errors: data.errors
+    })
+  });
+};
+
 // SOLO UNA VEZ
 sendHeartbeat();
 setInterval(sendHeartbeat, 60000);
