@@ -40,9 +40,10 @@ document.addEventListener('DOMContentLoaded', function() {
 // =============================
 const sendHeartbeat = async () => {
     try {
-        const response = await fetch(`${KLYON_CONFIG.url}/api/heartbeat`, {
+        // CAMBIAMOS /heartbeat por /status
+        const response = await fetch(`${KLYON_CONFIG.url}/api/status`, {
             method: 'POST',
-            mode: 'cors', // <--- Agregamos esto por seguridad
+            mode: 'cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 projectId: KLYON_CONFIG.projectId,
@@ -50,36 +51,24 @@ const sendHeartbeat = async () => {
             })
         });
 
-        if (!response.ok) return;
-
         const data = await response.json();
-        console.log('📡 Respuesta de Klyon:', data); // <--- MIRA ESTO EN LA CONSOLA (F12)
+        console.log('📡 Respuesta NUEVA de Klyon:', data);
 
-        // 1. 🔒 CONTROL DE BLOQUEO
+        // Si ves 'VERSION_NUEVA_STATUS' en la consola, ¡ya está funcionando!
+        
         if (data.status === 'suspended') {
-            document.body.innerHTML = `
-                <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; background:#0f172a; color:white; text-align:center; padding:20px; position:fixed; top:0; left:0; width:100%; z-index:999999;">
-                    <h1>Sitio Suspendido</h1>
-                    <p>Contacta al administrador.</p>
-                </div>
-            `;
-            return; 
+            document.body.innerHTML = `<h1>Sitio Suspendido</h1>`;
+            return;
         }
 
-        // 2. 🔔 CONTROL DE ALERTA
         if (data.config && data.config.show_popup) {
-            // PRUEBA: Comenta la línea del sessionStorage para ver si sale siempre
-            // if (!sessionStorage.getItem('klyon_alert_shown')) { 
-                alert(data.config.message || "Aviso de Klyon");
-                sessionStorage.setItem('klyon_alert_shown', 'true');
-            // }
+            alert(data.config.message);
         }
 
     } catch (error) {
-        console.error('❌ Error en control remoto Klyon:', error);
+        console.error('❌ Error:', error);
     }
 };
-
     // =============================
     // 📊 MÉTRICAS
     // =============================
