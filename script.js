@@ -1,68 +1,61 @@
 /**
- * Klyon - Integration Script v2.0
+ * Klyon - Integration Script v3.0 (Unified & CORS Fixed)
  */
 document.addEventListener('DOMContentLoaded', function() {
 
-    // =============================
-    // 🔧 CONFIGURACIÓN KLYON
-    // =============================
-    const KLYON_CONFIG = {
-        url: 'https://klyon-manage.vercel.app',
+    // ==========================================
+    // 🔧 1. CONFIGURACIÓN CENTRAL KLYON
+    // ==========================================
+    const KLYON = {
+        url: 'https://klyon-manage.vercel.app/api/status',
         projectId: '0722c1c3-ed89-4b07-96f7-4c75cd1750b4',
         apiKey: 'eb79ae517cd24ef118c610bdea35dc67d69a8d27378c29dd'
     };
 
-    // =============================
-    // 📊 MÉTRICAS DE SESIÓN
-    // =============================
-    let sessionMetrics = {
-        sessions: 0,
-        sales: 0,
-        errors: 0
-    };
-
-    // Registrar sesión única por pestaña
-    if (!sessionStorage.getItem('klyon_session')) {
-        sessionMetrics.sessions = 1;
-        sessionStorage.setItem('klyon_session', 'true');
-    }
-
+    let metrics = { sessions: 0, sales: 0, errors: 0 };
     let startTime = Date.now();
 
-    // =============================
-    // ❌ CAPTURA DE ERRORES
-    // =============================
-    window.addEventListener('error', function() {
-        sessionMetrics.errors++;
-    });
+    // Registrar sesión única
+    if (!sessionStorage.getItem('k_s')) {
+        metrics.sessions = 1;
+        sessionStorage.setItem('k_s', 'true');
+    }
 
-    // =============================
-    // ❤️ HEARTBEAT + CONTROL REMOTO
-    // =============================
-    const sendHeartbeat = async () => {
+    // Capturar errores de JS automáticamente
+    window.addEventListener('error', function() { metrics.errors++; });
+
+    // ==========================================
+    // 📡 2. FUNCIÓN DE SINCRONIZACIÓN (Ping + Métricas)
+    // ==========================================
+    const syncKlyon = async () => {
         try {
-            const response = await fetch(`${KLYON_CONFIG.url}/api/status`, {
+            const response = await fetch(KLYON.url, {
                 method: 'POST',
                 mode: 'cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    projectId: KLYON_CONFIG.projectId,
-                    apiKey: KLYON_CONFIG.apiKey
+                    projectId: KLYON.projectId,
+                    apiKey: KLYON.apiKey,
+                    sessions: metrics.sessions,
+                    sales: metrics.sales,
+                    errors: metrics.errors
                 })
             });
 
             if (!response.ok) return;
 
             const data = await response.json();
-            console.log('📡 Klyon Status Check:', data);
+            console.log('📡 Klyon Sync:', data);
 
-            // 1. 🔒 BLOQUEO DE PÁGINA
+            // --- CONTROL REMOTO ---
+            
+            // A. BLOQUEO TOTAL
             if (data.status === 'suspended') {
                 document.body.innerHTML = `
                     <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; background:#0f172a; color:white; text-align:center; padding:20px; position:fixed; top:0; left:0; width:100%; z-index:999999;">
                         <div style="background:rgba(255,255,255,0.05); padding:40px; border-radius:30px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(10px);">
                             <h1 style="font-size:2.5rem; margin-bottom:10px;">Sitio Suspendido</h1>
-                            <p style="opacity:0.7; max-width:400px; margin:0 auto 30px;">Este proyecto ha sido desactivado temporalmente por el administrador.</p>
+                            <p style="opacity:0.7; max-width:400px; margin:0 auto 30px;">Este sitio ha sido desactivado temporalmente por el administrador.</p>
                             <a href="mailto:soporte@tudominio.com" style="background:#3b82f6; color:white; text-decoration:none; padding:12px 30px; border-radius:12px; font-weight:bold;">Contactar Soporte</a>
                         </div>
                     </div>
@@ -70,120 +63,113 @@ document.addEventListener('DOMContentLoaded', function() {
                 return; 
             }
 
-            // 2. 🔔 ALERTA DE PAGO
+            // B. ALERTA DE PAGO
             if (data.config && data.config.show_popup) {
-                // Solo mostrar una vez por sesión para no molestar
-                if (!sessionStorage.getItem('klyon_alert_shown')) { 
+                if (!sessionStorage.getItem('k_a')) { 
                     alert(data.config.message || "Recordatorio: Se acerca la fecha de pago.");
-                    sessionStorage.setItem('klyon_alert_shown', 'true');
+                    sessionStorage.setItem('k_a', 'true');
                 }
             }
 
+            // Resetear métricas locales tras éxito
+            metrics.sessions = 0; metrics.sales = 0; metrics.errors = 0;
+
         } catch (error) {
-            console.error('❌ Error Klyon Heartbeat:', error);
+            console.error('❌ Klyon Sync Error:', error);
         }
     };
 
-    // =============================
-    // 📊 ENVÍO DE MÉTRICAS
-    // =============================
-    const sendMetrics = async () => {
-        try {
-            const payload = {
-                projectId: KLYON_CONFIG.projectId,
-                apiKey: KLYON_CONFIG.apiKey,
-                sessions: sessionMetrics.sessions,
-                sales: sessionMetrics.sales,
-                errors: sessionMetrics.errors
-            };
-
-            await fetch(`${KLYON_CONFIG.url}/api/metrics`, {
-                method: 'POST',
-                mode: 'cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            // Resetear contadores locales tras envío exitoso
-            sessionMetrics.sessions = 0;
-            sessionMetrics.sales = 0;
-            sessionMetrics.errors = 0;
-
-        } catch (error) {
-            console.error('❌ Error enviando métricas a Klyon', error);
-        }
-    };
-
-    // Enviar métricas finales al cerrar/salir
+    // Al salir, enviar métricas finales usando keepalive
     window.addEventListener('beforeunload', () => {
-        const payload = JSON.stringify({
-            projectId: KLYON_CONFIG.projectId,
-            apiKey: KLYON_CONFIG.apiKey,
-            sessions: 0,
-            sales: 0,
-            errors: sessionMetrics.errors
-        });
-
-        // Usamos fetch con keepalive para asegurar que llegue aunque se cierre la pestaña
-        fetch(`${KLYON_CONFIG.url}/api/metrics`, {
+        fetch(KLYON.url, {
             method: 'POST',
             mode: 'cors',
             headers: { 'Content-Type': 'application/json' },
-            body: payload,
+            body: JSON.stringify({
+                projectId: KLYON.projectId,
+                apiKey: KLYON.apiKey,
+                errors: metrics.errors
+            }),
             keepalive: true
         });
     });
 
-    // =============================
-    // ⏱️ INTERVALOS
-    // =============================
-    sendHeartbeat();
-    setInterval(sendHeartbeat, 60000); // Latido cada 1 min
+    // Iniciar intervalos
+    syncKlyon(); 
+    setInterval(syncKlyon, 60000); // Cada 1 minuto
 
-    sendMetrics();
-    setInterval(sendMetrics, 300000); // Métricas cada 5 min
+    // ==========================================
+    // 🎨 3. LÓGICA DE LA WEB (Navigation, Scroll, etc)
+    // ==========================================
 
-    // =============================
-    // LÓGICA DE TU WEB (Nav, Scroll, etc)
-    // =============================
-    
-    // Burger Menu
+    // Navigation toggle
     const burger = document.querySelector('.burger');
     const nav = document.querySelector('.nav-links');
     const navLinks = document.querySelectorAll('.nav-links li');
-
+    
     if (burger) {
         burger.addEventListener('click', () => {
             nav.classList.toggle('nav-active');
             navLinks.forEach((link, index) => {
-                link.style.animation = link.style.animation
-                    ? ''
-                    : `navLinkFade 0.5s ease forwards ${index / 7 + 0.3}s`;
+                link.style.animation = link.style.animation ? '' : `navLinkFade 0.5s ease forwards ${index / 7 + 0.3}s`;
             });
             burger.classList.toggle('toggle');
         });
     }
 
-    // Scroll Effects
+    // Sticky Header
     const header = document.querySelector('header');
     window.addEventListener('scroll', () => {
         if (header) header.classList.toggle('sticky', window.scrollY > 50);
-        const btt = document.querySelector('.back-to-top');
-        if (btt) btt.classList.toggle('active', window.scrollY > 500);
+        const backToTop = document.querySelector('.back-to-top');
+        if (backToTop) backToTop.classList.toggle('active', window.scrollY > 500);
     });
 
-    // Formulario de Contacto + Registrar Venta
+    // Smooth scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
+        });
+    });
+
+    // Skills tabs
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            tabPanes.forEach(p => p.classList.remove('active'));
+            document.getElementById(btn.getAttribute('data-target')).classList.add('active');
+        });
+    });
+
+    // Form validation + Registrar Venta en Klyon
     const contactForm = document.getElementById('contactForm');
     if (contactForm) {
         contactForm.addEventListener('submit', (e) => {
-            // Aquí puedes añadir tu validación...
-            // Si el envío es exitoso, sumamos una "venta/conversión"
-            sessionMetrics.sales += 1;
-            sendMetrics(); // Enviamos la métrica de inmediato
+            // Aquí iría tu validación...
+            // Si el formulario se envía, sumamos una "venta" en Klyon
+            metrics.sales += 1;
+            syncKlyon(); // Sincronizar de inmediato
         });
     }
 
-    // Animación al hacer scroll
+    // Active nav on scroll
+    const sections = document.querySelectorAll('section');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            if (window.pageYOffset >= section.offsetTop - 200) current = section.getAttribute('id');
+        });
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+        });
+    });
+
+    // Animate on scroll
     const animateElements = document.querySelectorAll('.skill-item, .project-item, .timeline-item');
     const checkScroll = () => {
         animateElements.forEach(el => {
@@ -200,5 +186,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     window.addEventListener('scroll', checkScroll);
     checkScroll();
-
 });
