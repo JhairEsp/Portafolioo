@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==========================================
     const KLYON = {
         url: 'https://klyon-manage.vercel.app/api/status',
-        projectId: '0722c1c3-ed89-4b07-96f7-4c75cd1750b4',
-        apiKey: 'eb79ae517cd24ef118c610bdea35dc67d69a8d27378c29dd'
+        projectId: '4746cf19-ec86-4a87-b6e8-a09ddcc5b4e6',
+        apiKey: 'e463a3d76c45635e547811396d5635e3ad6643b22f91ece5'
     };
 
     let metrics = { sessions: 0, sales: 0, errors: 0 };
