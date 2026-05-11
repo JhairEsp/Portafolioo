@@ -8,12 +8,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==========================================
     const KLYON = {
         url: 'https://klyon-manage.vercel.app/api/status',
+        // ASEGÚRATE DE QUE ESTOS SEAN LOS QUE SALEN EN TU DASHBOARD
         projectId: '4746cf19-ec86-4a87-b6e8-a09ddcc5b4e6',
         apiKey: 'e463a3d76c45635e547811396d5635e3ad6643b22f91ece5'
     };
 
     let metrics = { sessions: 0, sales: 0, errors: 0 };
-    let startTime = Date.now();
 
     // Registrar sesión única
     if (!sessionStorage.getItem('k_s')) {
@@ -21,12 +21,9 @@ document.addEventListener('DOMContentLoaded', function() {
         sessionStorage.setItem('k_s', 'true');
     }
 
-    // Capturar errores de JS automáticamente
-    window.addEventListener('error', function() { metrics.errors++; });
+    // Capturar errores
+    window.addEventListener('error', () => { metrics.errors++; });
 
-    // ==========================================
-    // 📡 2. FUNCIÓN DE SINCRONIZACIÓN (Ping + Métricas)
-    // ==========================================
     const syncKlyon = async () => {
         try {
             const response = await fetch(KLYON.url, {
@@ -42,46 +39,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             });
 
-            if (!response.ok) return;
-
             const data = await response.json();
-            console.log('📡 Klyon Sync:', data);
-
-            // --- CONTROL REMOTO ---
             
-            // A. BLOQUEO TOTAL
+            if (data.error) {
+                console.error('❌ Error de Klyon:', data.error);
+                return;
+            }
+
+            console.log('📡 Klyon Sync OK:', data);
+
+            // Control Remoto (Bloqueo)
             if (data.status === 'suspended') {
                 document.body.innerHTML = `
-                    <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:sans-serif; background:#0f172a; color:white; text-align:center; padding:20px; position:fixed; top:0; left:0; width:100%; z-index:999999;">
-                        <div style="background:rgba(255,255,255,0.05); padding:40px; border-radius:30px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(10px);">
-                            <h1 style="font-size:2.5rem; margin-bottom:10px;">Sitio Suspendido</h1>
-                            <p style="opacity:0.7; max-width:400px; margin:0 auto 30px;">Este sitio ha sido desactivado temporalmente por el administrador.</p>
-                            <a href="mailto:soporte@tudominio.com" style="background:#3b82f6; color:white; text-decoration:none; padding:12px 30px; border-radius:12px; font-weight:bold;">Contactar Soporte</a>
+                    <div style="height:100vh;display:flex;align-items:center;justify-content:center;background:#0f172a;color:white;font-family:sans-serif;text-align:center;padding:20px;">
+                        <div>
+                            <h1>SITIO SUSPENDIDO</h1>
+                            <p style="opacity:0.6;">Contacta al administrador para restaurar el acceso.</p>
                         </div>
-                    </div>
-                `;
-                return; 
+                    </div>`;
+                return;
             }
 
-            // B. ALERTA DE PAGO
-            if (data.config && data.config.show_popup) {
-                if (!sessionStorage.getItem('k_a')) { 
-                    alert(data.config.message || "Recordatorio: Se acerca la fecha de pago.");
-                    sessionStorage.setItem('k_a', 'true');
-                }
+            // Control Alerta
+            if (data.config && data.config.show_popup && !sessionStorage.getItem('k_a')) {
+                alert(data.config.message || "Recordatorio de pago pendiente.");
+                sessionStorage.setItem('k_a', 'true');
             }
 
-            // Resetear métricas locales tras éxito
+            // Limpiar métricas si el envío fue exitoso
             metrics.sessions = 0; metrics.sales = 0; metrics.errors = 0;
 
-        } catch (error) {
-            console.error('❌ Klyon Sync Error:', error);
+        } catch (e) {
+            console.error('❌ Error de conexión con Klyon');
         }
     };
 
-    // Al salir, enviar métricas finales usando keepalive
-    window.addEventListener('beforeunload', () => {
-        fetch(KLYON.url, {
+    // Sincronizar al cargar y cada 60 segundos
+    syncKlyon();
+    setInterval(syncKlyon, 60000);N.url, {
             method: 'POST',
             mode: 'cors',
             headers: { 'Content-Type': 'application/json' },
